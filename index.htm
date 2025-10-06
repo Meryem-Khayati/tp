@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #2c3e50;
+            font-size: 2.2em;
+        }
+
+        label {
+            display: block;
+            margin: 18px 0 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #d1d8e0;
+            border-radius: 10px;
+            font-size: 16px;
+            background: #f8fbff;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        .config-form {
+            border: 2px solid #3498db;
+            padding: 25px;
+            border-radius: 12px;
+            background: #f8fbff;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            max-width: 300px;
+            margin: auto;
+        }
+
+        #score {
+            font-size: 1.4em;
+            margin-top: 12px;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        #quiz-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+
+        .question-box {
+            width: 100%;
+            background: white;
+            padding: 25px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-box h2 {
+            margin-bottom: 20px;
+            color: #3498db;
+            font-size: 1.6em;
+            line-height: 1.4;
+        }
+
+        .option {
+            display: block;
+            padding: 14px;
+            margin: 10px 0;
+            background: #f1f9ff;
+            border: 2px solid #d1e7ff;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .option:hover {
+            background: #e1f0ff;
+            border-color: #a3d3ff;
+        }
+
+        .option input {
+            margin-right: 12px;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+
+
+
+        .timer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.3em;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .result {
+            text-align: center;
+            padding: 40px 20px;
+            font-size: 1.8em;
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            button {
+                font-size: 16px;
+                padding: 12px;
+            }
+        }
+
+
+
+
+
+        .correct {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .incorrect {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="container">
+        <div id="config-screen">
+            <h1>Quiz</h1>
+            <form id="quiz-config" class="config-form">
+                <label for="amount">Nombre de questions</label>
+                <input type="number" id="amount" min="1" max="50" value="10" required>
+
+                <label for="category">Catégorie</label>
+                <select id="category">
+                    <option value="">Toutes les catégories</option>
+                </select>
+
+                <label for="difficulty">Niveau de difficulté</label>
+                <select id="difficulty">
+                    <option value="">Tous les niveaux</option>
+                    <option value="easy">Facile</option>
+                    <option value="medium">Moyen</option>
+                    <option value="hard">Difficile</option>
+                </select>
+
+                <label for="type">Type de question</label>
+                <select id="type">
+                    <option value="">Tous les types</option>
+                    <option value="multiple">Choix multiples</option>
+                    <option value="boolean">Vrai / Faux</option>
+                </select>
+
+                <button type="submit">Commencer le Quiz</button>
+            </form>
+        </div>
+
+        <div id="quiz-screen" class="hidden">
+            <header>
+                <h1>Quiz </h1>
+                <div id="score">Score : 0 / 0</div>
+            </header>
+
+            <main id="quiz-container"></main>
+        </div>
+    </div>
+
+    <script>
+        let questions = [];
+        let currentQuestion = 0;
+        let score = 0;
+        let timeLeft = 15;
+        let timer;
+        let quizConfig = {};
+        let userAnswer = null;
+        let answerSelected = false;
+
+        const configScreen = document.getElementById('config-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const quizContainer = document.getElementById('quiz-container');
+        const scoreElement = document.getElementById('score');
+        const quizForm = document.getElementById('quiz-config');
+
+        fetch("https://opentdb.com/api_category.php")
+            .then(response => response.json())
+            .then(data => {
+                const categorySelect = document.getElementById('category');
+                data.trivia_categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    option.textContent = category.name;
+                    categorySelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Erreur chargement catégories:', error);
+            });
+
+
+        function decodeHtml(html) {
+            const txt = document.createElement('textarea');
+            txt.innerHTML = html;
+            return txt.value;
+        }
+
+        quizForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            quizConfig = {
+                amount: document.getElementById("amount").value,
+                category: document.getElementById("category").value,
+                difficulty: document.getElementById("difficulty").value,
+                type: document.getElementById("type").value
+            };
+
+            loadQuestions();
+        });
+
+        function loadQuestions() {
+            const params = new URLSearchParams();
+            if (quizConfig.amount) params.append('amount', quizConfig.amount);
+            if (quizConfig.category) params.append('category', quizConfig.category);
+            if (quizConfig.difficulty) params.append('difficulty', quizConfig.difficulty);
+            if (quizConfig.type) params.append('type', quizConfig.type);
+
+            const apiUrl = `https://opentdb.com/api.php?${params.toString()}`;
+
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error("Erreur de réseau");
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.response_code !== 0) throw new Error("Aucune question disponible");
+
+                    questions = data.results.map(question => {
+                        const correct = decodeHtml(question.correct_answer);
+                        const incorrect = question.incorrect_answers.map(decodeHtml);
+                        let answers = [...incorrect, correct];
+                        answers.sort(() => Math.random() - 0.5);
+
+                        return {
+                            question: decodeHtml(question.question),
+                            answers: answers,
+                            correctAnswer: correct
+                        };
+                    });
+
+                    configScreen.classList.add('hidden');
+                    quizScreen.classList.remove('hidden');
+
+                    scoreElement.textContent = `Score : 0 / ${questions.length}`;
+                    showQuestion();
+                })
+                .catch(error => {
+                    alert("Erreur: " + error.message);
+                    console.error(error);
+                });
+        }
+
+        function showQuestion() {
+            if (currentQuestion >= questions.length) {
+                showResults();
+                return;
+            }
+
+            clearInterval(timer);
+            timeLeft = 15;
+            userAnswer = null;
+            answerSelected = false;
+
+            const question = questions[currentQuestion];
+
+            let optionsHTML = question.answers.map((answer, index) => `
+                <label class="option" data-index="${index}">
+                    <input type="radio" name="answer" value="${index}">
+                    ${answer}
+                </label>
+            `).join('');
+
+            quizContainer.innerHTML = `
+                <div class="question-box">
+                    <h2>${currentQuestion + 1}. ${question.question}</h2>
+                    <div class="options-container">
+                        ${optionsHTML}
+                    </div>
+                    <div class="timer">
+                        Temps : <span id="time">${timeLeft}</span> s
+                    </div>
+                </div>
+            `;
+
+            document.querySelectorAll('.option').forEach(option => {
+                option.addEventListener('click', function () {
+                    if (answerSelected) return;
+
+                    document.querySelectorAll('.option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+
+                    this.classList.add('selected');
+                    const radio = this.querySelector('input[type="radio"]');
+                    radio.checked = true;
+                    userAnswer = parseInt(this.dataset.index);
+                    answerSelected = true;
+
+                });
+            });
+
+            timer = setInterval(() => {
+                timeLeft--;
+                const timeSpan = document.getElementById('time');
+                if (timeSpan) timeSpan.textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    checkAnswerAndContinue();
+                }
+            }, 1000);
+        }
+
+        function checkAnswerAndContinue() {
+            const question = questions[currentQuestion];
+            let isCorrect = false;
+
+            if (userAnswer !== null) {
+                isCorrect = question.answers[userAnswer] === question.correctAnswer;
+
+                if (isCorrect) {
+                    score++;
+                }
+
+                document.querySelectorAll('.option').forEach(option => {
+                    const optionIndex = parseInt(option.dataset.index);
+                    if (optionIndex === userAnswer) {
+                        option.classList.add(isCorrect ? 'correct' : 'incorrect');
+                    }
+                    if (question.answers[optionIndex] === question.correctAnswer) {
+                        option.classList.add('correct');
+                    }
+                });
+            }
+
+            scoreElement.textContent = `Score : ${score} / ${questions.length}`;
+
+            setTimeout(() => {
+                currentQuestion++;
+                showQuestion();
+            }, 2000);
+        }
+
+        function showResults() {
+            clearInterval(timer);
+
+            const percentage = Math.round((score / questions.length) * 100);
+
+            quizContainer.innerHTML = `
+                <div class="result">
+                    <h2>Quiz Terminé !</h2>
+                    <p>Votre score est: ${score} / ${questions.length} (${percentage}%)</p>
+                </div>
+            `;
+        }
+
+
+    </script>
+</body>
+
+</html>
